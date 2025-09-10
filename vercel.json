@@ -23,6 +23,6 @@
       "dest": "/build/$1"
     }
   ],
-  "installCommand": "npm ci",
-  "buildCommand": "npm run build"
+  "installCommand": "yarn install",
+  "buildCommand": "yarn build"
 }
