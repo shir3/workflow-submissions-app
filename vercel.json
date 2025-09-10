@@ -1,5 +1,10 @@
 {
   "version": 2,
+  "functions": {
+    "server/proxy-server.js": {
+      "runtime": "nodejs20.x"
+    }
+  },
   "builds": [
     {
       "src": "server/proxy-server.js",
@@ -19,5 +24,7 @@
       "src": "/(.*)",
       "dest": "/build/$1"
     }
-  ]
+  ],
+  "installCommand": "npm ci",
+  "buildCommand": "npm run build"
 }
