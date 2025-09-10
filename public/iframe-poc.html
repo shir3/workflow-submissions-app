@@ -1,0 +1,2136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🚀 BR Iframe POC - Wix Enterprise Wrapper</title>
+  <script
+    crossorigin
+    src="https://unpkg.com/react@18/umd/react.development.js"
+  ></script>
+  <script
+    crossorigin
+    src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
+  ></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f6f7f9;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .wrapper {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100%;
+    }
+
+    .header {
+      background: linear-gradient(45deg, #2196F3, #21CBF3);
+      color: white;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      z-index: 100;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .badges {
+      display: flex;
+      gap: 12px;
+    }
+
+    .badge {
+      background: rgba(255,255,255,0.2);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      backdrop-filter: blur(10px);
+    }
+
+    .main-content {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 68px);
+      gap: 20px;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .iframe-container {
+      flex: 1;
+      height: 100%;
+      border: 1px solid #D9DBE9;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #f5f5f5;
+    }
+
+    .app-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    /* Side Panel Styles */
+    .sidePanel {
+      width: 400px;
+      height: 100%;
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidePanelHeader {
+      padding: 20px;
+      border-bottom: 1px solid #D9DBE9;
+      background-color: #f8f9fa;
+    }
+
+    .sidePanelTitle {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: #333333;
+    }
+
+    .sidePanelContent {
+      flex: 1;
+      padding: 20px;
+      overflow: hidden;
+    }
+
+    .contentContainer {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .contentBody {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+    }
+
+    /* Badge */
+    .badgeContainer {
+      margin-bottom: 8px;
+    }
+
+    .component-badge {
+      display: inline-block;
+      background-color: #e9ecef;
+      color: #495057;
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Text Sections */
+    .textSection {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .label {
+      font-weight: 600;
+      color: #333333;
+      font-size: 14px;
+    }
+
+    .text {
+      margin: 0;
+      color: #495057;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* Buttons */
+    .buttonContainer {
+      display: flex;
+      flex-direction: row;
+      gap: 6px;
+      margin-top: 16px;
+    }
+
+    .button {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background-color: transparent;
+    }
+
+    .button:focus {
+      outline: 2px solid #007bff;
+      outline-offset: 2px;
+    }
+
+    .button:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .approveButton {
+      color: #28a745;
+      border-color: #28a745;
+    }
+
+    .approveButton:hover:not(:disabled):not(.approved):not(.disabled) {
+      background-color: rgba(40, 167, 69, 0.1);
+    }
+
+    .approveButton.approved {
+      background-color: #28a745;
+      color: white;
+      border-color: #28a745;
+    }
+
+    .rejectButton {
+      color: #dc3545;
+      border-color: #dc3545;
+    }
+
+    .rejectButton:hover:not(:disabled):not(.rejected):not(.disabled) {
+      background-color: rgba(220, 53, 69, 0.1);
+    }
+
+    .rejectButton.rejected {
+      background-color: #dc3545;
+      color: white;
+      border-color: #dc3545;
+    }
+
+    .button.disabled {
+      color: #999999;
+      border-color: #999999;
+    }
+
+    /* Side Panel Footer */
+    .sidePanelFooter {
+      padding: 20px;
+      border-top: 1px solid #D9DBE9;
+      background-color: #f8f9fa;
+    }
+
+    .navigationContainer {
+      display: flex;
+      flex-direction: row;
+      gap: 24px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .navButton {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background-color: transparent;
+      border: 1px solid #D9DBE9;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #495057;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .navButton:hover:not(:disabled):not(.disabled) {
+      background-color: #f8f9fa;
+      border-color: #adb5bd;
+    }
+
+    .navButton:disabled,
+    .navButton.disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+      color: #999999;
+      border-color: #e9ecef;
+    }
+
+    .navButton:focus {
+      outline: 2px solid #007bff;
+      outline-offset: 2px;
+    }
+
+    .arrowLeft,
+    .arrowRight {
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    /* Status indicator */
+    .status-indicator {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: monospace;
+      z-index: 1000;
+      max-width: 300px;
+      word-wrap: break-word;
+    }
+
+    .status-success {
+      background: rgba(40, 167, 69, 0.9);
+    }
+
+    .status-error {
+      background: rgba(220, 53, 69, 0.9);
+    }
+
+    /* Header Action Buttons */
+    .headerButtonContainer {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .headerActionButton {
+      background: #fff;
+      color: #2196F3;
+      border: 1px solid #2196F3;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 10px 20px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, border 0.2s;
+      width: auto;
+      display: inline-block;
+      box-shadow: none;
+    }
+
+    .headerActionButton:hover:not(:disabled) {
+      background: #e3f2fd;
+      color: #1565c0;
+      border-color: #1565c0;
+    }
+
+    /* Modal Styles - Wix Design */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.5);
+      animation: modalFadeIn 0.2s ease-out;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-content {
+      background: #ffffff;
+      margin: 5% auto;
+      padding: 0;
+      border: none;
+      border-radius: 8px;
+      width: 80%;
+      max-width: 800px;
+      max-height: 80vh;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: modalSlideUp 0.3s ease-out;
+    }
+
+    @keyframes modalSlideUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .modal-header {
+      padding: 24px 32px;
+      background: #ffffff;
+      border-bottom: 1px solid #e5e5e5;
+      border-radius: 8px 8px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+      color: #162d3d;
+      font-family: "HelveticaNeueW01-45Ligh", "HelveticaNeueW02-45Ligh", "HelveticaNeueW10-45Ligh", Helvetica, Arial, "メイリオ", meiryo, "ヒラギノ角ゴ pro w3", "hiragino kaku gothic pro", sans-serif;
+    }
+
+    .modal-body {
+      padding: 32px;
+      flex: 1;
+      overflow-y: auto;
+      background: #ffffff;
+    }
+
+    .modal-footer {
+      padding: 24px 32px;
+      background: #f8f9fa;
+      border-top: 1px solid #e5e5e5;
+      border-radius: 0 0 8px 8px;
+    }
+
+    .close {
+      color: #7a7a7a;
+      font-size: 24px;
+      font-weight: normal;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: #3899ec;
+      background: #f5f5f5;
+      text-decoration: none;
+    }
+
+    .json-display {
+      background-color: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 4px;
+      padding: 15px;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 12px;
+      line-height: 1.4;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .diff-section {
+      margin-bottom: 20px;
+    }
+
+    .diff-section-title {
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 10px;
+      padding: 8px 12px;
+      background-color: #e9ecef;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .modal-close-btn {
+      background: #ffffff;
+      color: #3899ec;
+      border: 1px solid #3899ec;
+      padding: 12px 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      font-family: "HelveticaNeueW01-45Ligh", "HelveticaNeueW02-45Ligh", "HelveticaNeueW10-45Ligh", Helvetica, Arial, sans-serif;
+      min-width: 80px;
+    }
+
+    .modal-close-btn:hover {
+      background: #3899ec;
+      color: #ffffff;
+    }
+
+    /* Modal Content - Wix Design */
+    .mcp-ui-container {
+      padding: 0;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    .mcp-content-renderer {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .mcp-diff-card {
+      background: #ffffff;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .mcp-diff-card:hover {
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+      border-color: #3899ec;
+    }
+
+    .mcp-diff-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+
+    .mcp-diff-type {
+      font-weight: 600;
+      color: #162d3d;
+      font-size: 18px;
+      text-transform: capitalize;
+      font-family: "HelveticaNeueW01-45Ligh", "HelveticaNeueW02-45Ligh", "HelveticaNeueW10-45Ligh", Helvetica, Arial, sans-serif;
+    }
+
+    .mcp-diff-count {
+      background: #3899ec;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+      font-family: "HelveticaNeueW01-45Ligh", "HelveticaNeueW02-45Ligh", "HelveticaNeueW10-45Ligh", Helvetica, Arial, sans-serif;
+    }
+
+    .mcp-diff-content {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .mcp-change-item {
+      background: #f8f9fa;
+      border: 1px solid #e5e5e5;
+      border-radius: 4px;
+      padding: 16px;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+      font-size: 14px;
+      line-height: 1.5;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    .mcp-change-item::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: #3899ec;
+      border-radius: 0 2px 2px 0;
+    }
+
+    .mcp-change-item:hover {
+      background: #ffffff;
+      border-color: #3899ec;
+    }
+
+    .mcp-change-before {
+      background: #fff5f5;
+      border-color: #fecaca;
+      margin-bottom: 8px;
+    }
+
+    .mcp-change-before::before {
+      background: #ef4444;
+    }
+
+    .mcp-change-after {
+      background: #f0fdf4;
+      border-color: #bbf7d0;
+    }
+
+    .mcp-change-after::before {
+      background: #22c55e;
+    }
+
+    .mcp-change-label {
+      font-weight: 600;
+      color: #6b7280;
+      font-size: 12px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      letter-spacing: 0.05em;
+      font-family: "HelveticaNeueW01-45Ligh", "HelveticaNeueW02-45Ligh", "HelveticaNeueW10-45Ligh", Helvetica, Arial, sans-serif;
+    }
+
+    .mcp-theme-preview {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      margin-left: 8px;
+      vertical-align: middle;
+      border: 1px solid #e5e5e5;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s ease;
+    }
+
+    .mcp-theme-preview:hover {
+      border-color: #3899ec;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .modal-action-btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .modal-action-btn.primary {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .modal-action-btn.primary:hover {
+      background-color: #218838;
+    }
+
+    .modal-action-btn.secondary {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    .modal-action-btn.secondary:hover {
+      background-color: #c82333;
+    }
+
+    .mcp-expandable {
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+      border-radius: 4px;
+      padding: 4px 8px;
+      margin: -4px -8px;
+    }
+
+    .mcp-expandable:hover {
+      background: #f0f9ff;
+      color: #3899ec;
+    }
+
+    .mcp-expandable::before {
+      content: '▶';
+      margin-right: 8px;
+      transition: all 0.2s ease;
+      font-size: 10px;
+      color: #6b7280;
+      display: inline-block;
+    }
+
+    .mcp-expandable.expanded::before {
+      transform: rotate(90deg);
+      color: #3899ec;
+    }
+
+    .mcp-collapsible {
+      max-height: 0;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      opacity: 0;
+    }
+
+    .mcp-collapsible.expanded {
+      max-height: 600px;
+      opacity: 1;
+      padding-top: 8px;
+    }
+
+    /* Individual card action buttons - Wix Style */
+    .mcp-card-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .mcp-card-btn {
+      padding: 8px 16px;
+      border: 1px solid #e5e5e5;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: #ffffff;
+      color: #162d3d;
+      font-family: "HelveticaNeueW01-45Ligh", "HelveticaNeueW02-45Ligh", "HelveticaNeueW10-45Ligh", Helvetica, Arial, sans-serif;
+      min-width: 80px;
+      text-align: center;
+    }
+
+    .mcp-card-btn.approve {
+      color: #00c26f;
+      border-color: #00c26f;
+    }
+
+    .mcp-card-btn.approve:hover {
+      background: #f0fdf4;
+      border-color: #00c26f;
+    }
+
+    .mcp-card-btn.approve.active {
+      background: #00c26f;
+      color: white;
+      border-color: #00c26f;
+    }
+
+    .mcp-card-btn.reject {
+      color: #ff5252;
+      border-color: #ff5252;
+    }
+
+    .mcp-card-btn.reject:hover {
+      background: #fff5f5;
+      border-color: #ff5252;
+    }
+
+    .mcp-card-btn.reject.active {
+      background: #ff5252;
+      color: white;
+      border-color: #ff5252;
+    }
+
+    /* Card status styling - Wix Design */
+    .mcp-diff-card[data-status="approved"] {
+      background: #f0fdf4;
+      border-color: #00c26f;
+      border-left: 4px solid #00c26f;
+    }
+
+    .mcp-diff-card[data-status="rejected"] {
+      background: #fff5f5;
+      border-color: #ff5252;
+      border-left: 4px solid #ff5252;
+    }
+
+    .mcp-diff-card[data-status="neutral"] {
+      background: #ffffff;
+      border-color: #e5e5e5;
+    }
+
+    /* Card focus styles - Wix Design */
+    .mcp-diff-card {
+      outline: none;
+      cursor: pointer;
+    }
+
+    .mcp-diff-card:focus {
+      box-shadow: 0 0 0 2px #3899ec;
+      outline: none;
+      border-color: #3899ec;
+    }
+
+    /* Status indicator in card header - Wix Design */
+    .mcp-status-indicator {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-left: 12px;
+      transition: all 0.2s ease;
+    }
+
+    .mcp-status-indicator.approved {
+      background: #00c26f;
+    }
+
+    .mcp-status-indicator.rejected {
+      background: #ff5252;
+    }
+
+    .mcp-status-indicator.neutral {
+      background: #6b7280;
+    }
+
+    /* Modal summary styling - Wix Design */
+    .modal-summary {
+      flex: 1;
+      padding: 12px 16px;
+      background: #f8f9fa;
+      border-radius: 4px;
+      border: 1px solid #e5e5e5;
+      font-size: 14px;
+      color: #162d3d;
+      font-weight: 400;
+      font-family: "HelveticaNeueW01-45Ligh", "HelveticaNeueW02-45Ligh", "HelveticaNeueW10-45Ligh", Helvetica, Arial, sans-serif;
+    }
+
+    .modal-actions {
+      justify-content: space-between;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="main-content">
+    <div class="iframe-container">
+      <iframe
+        id="app-iframe"
+        class="app-iframe"
+        src="https://browner3.wixstudio.com/shawnmace/_api/enterprise/br-iframe-poc?published=https://browner3.wixstudio.com/shawnmace&edited=https://browner3.wixstudio.com/shawnmace?siteRevision=16"
+        title="BR Iframe POC Application"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-top-navigation-by-user-activation"
+      >
+      </iframe>
+    </div>
+
+    <div class="sidePanel">
+      <div class="sidePanelHeader">
+        <div class="headerButtonContainer">
+          <button id="first-btn" class="headerActionButton">
+            Start Review
+          </button>
+          <button
+            id="other-diffs-btn"
+            class="headerActionButton"
+            style="display: none;"
+          >
+            Meta Data Diffs
+          </button>
+        </div>
+        <h2 id="panel-title" class="sidePanelTitle">
+          Compliance Review - Item 1 of 6
+        </h2>
+      </div>
+      <div class="sidePanelContent">
+        <div class="contentContainer">
+          <div class="contentBody">
+            <div class="badgeContainer">
+                  <span id="component-type-badge" class="component-badge"
+                  >—</span
+                  >
+            </div>
+            <div class="textSection">
+              <span class="label">Before:</span>
+              <p id="before-text" class="text">
+                `${diffs[currentIndex].before}`
+              </p>
+            </div>
+            <div class="textSection">
+              <span class="label">After:</span>
+              <p id="after-text" class="text">
+                `${diffs[currentIndex].after}`
+              </p>
+            </div>
+          </div>
+          <div class="buttonContainer">
+            <button id="approve-btn" class="button approveButton">
+              Approve
+            </button>
+            <button id="reject-btn" class="button rejectButton">
+              Reject
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="sidePanelFooter">
+        <div class="navigationContainer">
+          <button id="prev-btn" class="navButton">
+            <span class="arrowLeft">‹</span>
+            Previous Item
+          </button>
+          <button id="next-btn" class="navButton">
+            Next Item
+            <span class="arrowRight">›</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Enhanced MCP-UI Modal for Additional Diffs -->
+<div id="diffsModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Meta Data Diffs</h3>
+      <button
+        class="close"
+        onclick="closeDiffsModal()"
+        aria-label="Close modal"
+      >
+        &times;
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="mcp-ui-container">
+        <div id="mcpModalContent" class="mcp-content-renderer"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="modal-actions">
+        <div class="modal-summary" id="modalSummary">
+          <span id="summaryText">Review individual diff types above</span>
+        </div>
+        <button class="modal-close-btn" onclick="closeDiffsModal()">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Enhanced MCP-UI Modal functions for additional diffs
+  function openDiffsModal(otherDiffs) {
+    console.log('Opening MCP-UI modal with otherDiffs:', otherDiffs);
+    const modal = document.getElementById('diffsModal');
+    const modalContent = document.getElementById('mcpModalContent');
+    const modalTitle = document.querySelector('.modal-title');
+
+    // Update modal title with diff types
+    const diffTypes = Object.keys(otherDiffs).join(', ').replace(/_/g, ' ').toUpperCase();
+    modalTitle.textContent = `Meta Data Diffs: ${diffTypes}`;
+
+    // Clear previous content
+    modalContent.innerHTML = '';
+
+    // Create MCP-UI structured content for each diff type
+    Object.keys(otherDiffs).forEach(diffType => {
+      const mcpCard = createMcpDiffCard(diffType, otherDiffs[diffType]);
+      modalContent.appendChild(mcpCard);
+    });
+
+    modal.style.display = 'block';
+
+    // Add click outside to close
+    modal.onclick = function(event) {
+      if (event.target === modal) {
+        closeDiffsModal();
+      }
+    };
+
+    // Add keyboard navigation
+    modal.addEventListener('keydown', handleModalKeydown);
+
+    // Initialize summary
+    updateModalSummary();
+  }
+
+  // Create structured MCP-UI diff card
+  function createMcpDiffCard(diffType, diffData) {
+    const card = document.createElement('div');
+    card.className = 'mcp-diff-card';
+    card.setAttribute('data-diff-type', diffType);
+    card.setAttribute('data-status', 'neutral'); // neutral, approved, rejected
+    card.setAttribute('tabindex', '0'); // Make focusable
+
+    // Create header with type and count
+    const header = document.createElement('div');
+    header.className = 'mcp-diff-header';
+
+    const leftSection = document.createElement('div');
+    leftSection.style.display = 'flex';
+    leftSection.style.alignItems = 'center';
+    leftSection.style.gap = '12px';
+
+    const typeLabel = document.createElement('div');
+    typeLabel.className = 'mcp-diff-type mcp-expandable';
+    typeLabel.textContent = diffType.replace(/_/g, ' ');
+
+    const count = getDiffCount(diffType, diffData);
+    const countBadge = document.createElement('div');
+    countBadge.className = 'mcp-diff-count';
+    countBadge.textContent = `${count} changes`;
+
+    leftSection.appendChild(typeLabel);
+    leftSection.appendChild(countBadge);
+
+    // Add status indicator
+    const statusIndicator = document.createElement('div');
+    statusIndicator.className = 'mcp-status-indicator neutral';
+    statusIndicator.setAttribute('data-status-indicator', diffType);
+    leftSection.appendChild(statusIndicator);
+
+    // Create individual action buttons for this diff type
+    const actionButtons = document.createElement('div');
+    actionButtons.className = 'mcp-card-actions';
+    actionButtons.style.display = 'flex';
+    actionButtons.style.gap = '8px';
+
+    const approveBtn = document.createElement('button');
+    approveBtn.className = 'mcp-card-btn approve';
+    approveBtn.textContent = 'Approve';
+    approveBtn.onclick = (e) => {
+      e.stopPropagation();
+      toggleDiffStatus(card, 'approved');
+    };
+
+    const rejectBtn = document.createElement('button');
+    rejectBtn.className = 'mcp-card-btn reject';
+    rejectBtn.textContent = 'Reject';
+    rejectBtn.onclick = (e) => {
+      e.stopPropagation();
+      toggleDiffStatus(card, 'rejected');
+    };
+
+    actionButtons.appendChild(approveBtn);
+    actionButtons.appendChild(rejectBtn);
+
+    header.appendChild(leftSection);
+    header.appendChild(actionButtons);
+
+    // Create collapsible content
+    const content = document.createElement('div');
+    content.className = 'mcp-diff-content mcp-collapsible expanded';
+
+    // Generate content based on diff type
+    if (diffType === 'seo_diffs') {
+      content.appendChild(createMcpSeoDiffs(diffData));
+    } else if (diffType === 'theme_diffs') {
+      content.appendChild(createMcpThemeDiffs(diffData));
+    } else {
+      content.appendChild(createMcpGenericDiffs(diffData));
+    }
+
+    // Add expand/collapse functionality
+    typeLabel.addEventListener('click', () => {
+      typeLabel.classList.toggle('expanded');
+      content.classList.toggle('expanded');
+    });
+
+    card.appendChild(header);
+    card.appendChild(content);
+
+    return card;
+  }
+
+  // Get count of changes for a diff type
+  function getDiffCount(diffType, diffData) {
+    if (diffType === 'seo_diffs' && diffData.seoData) {
+      return Object.values(diffData.seoData).reduce((total, data) => {
+        return total + (data.diff_list ? data.diff_list.length : 0);
+      }, 0);
+    } else if (diffType === 'theme_diffs' && diffData.theme_changes) {
+      return diffData.theme_changes.length;
+    }
+    return Object.keys(diffData).length;
+  }
+
+  // Create MCP-UI formatted SEO diffs
+  function createMcpSeoDiffs(seoDiffs) {
+    const container = document.createElement('div');
+
+    if (seoDiffs.seoData) {
+      Object.keys(seoDiffs.seoData).forEach(seoKey => {
+        const seoSection = document.createElement('div');
+        seoSection.style.marginBottom = '16px';
+
+        const seoTitle = document.createElement('div');
+        seoTitle.className = 'mcp-change-label';
+        seoTitle.textContent = seoKey.replace(/([A-Z])/g, ' $1').trim();
+        seoSection.appendChild(seoTitle);
+
+        const diffList = seoDiffs.seoData[seoKey].diff_list || [];
+        diffList.forEach(diff => {
+          const changeItem = document.createElement('div');
+          changeItem.className = 'mcp-change-item';
+
+          const changeType = document.createElement('div');
+          changeType.className = 'mcp-change-label';
+          changeType.textContent = `Change Type: ${diff.change_type}`;
+
+          const beforeDiv = document.createElement('div');
+          beforeDiv.className = 'mcp-change-before';
+          beforeDiv.innerHTML = `<div class="mcp-change-label">Before:</div>${diff.before || 'null'}`;
+
+          const afterDiv = document.createElement('div');
+          afterDiv.className = 'mcp-change-after';
+          afterDiv.innerHTML = `<div class="mcp-change-label">After:</div>${diff.after}`;
+
+          changeItem.appendChild(changeType);
+          if (diff.before !== null) {
+            changeItem.appendChild(beforeDiv);
+          }
+          changeItem.appendChild(afterDiv);
+          seoSection.appendChild(changeItem);
+        });
+
+        container.appendChild(seoSection);
+      });
+    } else {
+      container.appendChild(createMcpGenericDiffs(seoDiffs));
+    }
+
+    return container;
+  }
+
+  // Create MCP-UI formatted theme diffs
+  function createMcpThemeDiffs(themeDiffs) {
+    const container = document.createElement('div');
+
+    if (themeDiffs.theme_changes && Array.isArray(themeDiffs.theme_changes)) {
+      themeDiffs.theme_changes.forEach((change, index) => {
+        const changeItem = document.createElement('div');
+        changeItem.className = 'mcp-change-item';
+
+        const title = document.createElement('div');
+        title.className = 'mcp-change-label';
+        title.textContent = `Theme Change ${index + 1}: ${change.changed_property}`;
+
+        const changeType = document.createElement('div');
+        changeType.style.marginBottom = '8px';
+        changeType.innerHTML = `<strong>Type:</strong> ${change.change_type}`;
+
+        const beforeDiv = document.createElement('div');
+        beforeDiv.className = 'mcp-change-before';
+        const beforePreview = document.createElement('span');
+        beforePreview.className = 'mcp-theme-preview';
+        beforePreview.style.backgroundColor = change.before;
+        beforeDiv.innerHTML = `<div class="mcp-change-label">Before:</div>${change.before}`;
+        beforeDiv.appendChild(beforePreview);
+
+        const afterDiv = document.createElement('div');
+        afterDiv.className = 'mcp-change-after';
+        const afterPreview = document.createElement('span');
+        afterPreview.className = 'mcp-theme-preview';
+        afterPreview.style.backgroundColor = change.after;
+        afterDiv.innerHTML = `<div class="mcp-change-label">After:</div>${change.after}`;
+        afterDiv.appendChild(afterPreview);
+
+        changeItem.appendChild(title);
+        changeItem.appendChild(changeType);
+        changeItem.appendChild(beforeDiv);
+        changeItem.appendChild(afterDiv);
+        container.appendChild(changeItem);
+      });
+    } else {
+      container.appendChild(createMcpGenericDiffs(themeDiffs));
+    }
+
+    return container;
+  }
+
+  // Create MCP-UI formatted generic diffs
+  function createMcpGenericDiffs(diffData) {
+    const container = document.createElement('div');
+    const pre = document.createElement('pre');
+    pre.className = 'mcp-change-item';
+    pre.style.whiteSpace = 'pre-wrap';
+    pre.style.wordWrap = 'break-word';
+    pre.textContent = JSON.stringify(diffData, null, 2);
+    container.appendChild(pre);
+    return container;
+  }
+
+  function closeDiffsModal() {
+    const modal = document.getElementById('diffsModal');
+    modal.style.display = 'none';
+    modal.removeEventListener('keydown', handleModalKeydown);
+  }
+
+  // Handle modal keyboard navigation
+  function handleModalKeydown(event) {
+    const cards = document.querySelectorAll('.mcp-diff-card');
+    let focusedCardIndex = -1;
+
+    // Find currently focused card
+    cards.forEach((card, index) => {
+      if (card.contains(document.activeElement) || card === document.activeElement) {
+        focusedCardIndex = index;
+      }
+    });
+
+    switch(event.key) {
+      case 'Escape':
+        closeDiffsModal();
+        break;
+      case 'a':
+      case 'A':
+        if (event.ctrlKey || event.metaKey) {
+          event.preventDefault();
+          // Approve all cards
+          cards.forEach(card => {
+            if (card.getAttribute('data-status') !== 'approved') {
+              toggleDiffStatus(card, 'approved');
+            }
+          });
+        } else if (focusedCardIndex >= 0) {
+          event.preventDefault();
+          toggleDiffStatus(cards[focusedCardIndex], 'approved');
+        }
+        break;
+      case 'r':
+      case 'R':
+        if (event.ctrlKey || event.metaKey) {
+          event.preventDefault();
+          // Reject all cards
+          cards.forEach(card => {
+            if (card.getAttribute('data-status') !== 'rejected') {
+              toggleDiffStatus(card, 'rejected');
+            }
+          });
+        } else if (focusedCardIndex >= 0) {
+          event.preventDefault();
+          toggleDiffStatus(cards[focusedCardIndex], 'rejected');
+        }
+        break;
+      case 'n':
+      case 'N':
+        if (focusedCardIndex >= 0) {
+          event.preventDefault();
+          toggleDiffStatus(cards[focusedCardIndex], 'neutral');
+        }
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        if (focusedCardIndex < cards.length - 1) {
+          cards[focusedCardIndex + 1].focus();
+        } else if (cards.length > 0) {
+          cards[0].focus();
+        }
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        if (focusedCardIndex > 0) {
+          cards[focusedCardIndex - 1].focus();
+        } else if (cards.length > 0) {
+          cards[cards.length - 1].focus();
+        }
+        break;
+    }
+  }
+
+  // Toggle individual diff status (approve/reject/neutral)
+  function toggleDiffStatus(card, newStatus) {
+    const currentStatus = card.getAttribute('data-status');
+    const diffType = card.getAttribute('data-diff-type');
+
+    // If clicking the same status, toggle to neutral
+    const finalStatus = currentStatus === newStatus ? 'neutral' : newStatus;
+
+    // Update card status
+    card.setAttribute('data-status', finalStatus);
+
+    // Update status indicator
+    const statusIndicator = card.querySelector(`[data-status-indicator="${diffType}"]`);
+    statusIndicator.className = `mcp-status-indicator ${finalStatus}`;
+
+    // Update button states
+    const approveBtn = card.querySelector('.mcp-card-btn.approve');
+    const rejectBtn = card.querySelector('.mcp-card-btn.reject');
+
+    // Reset button states
+    approveBtn.classList.remove('active');
+    rejectBtn.classList.remove('active');
+
+    // Set active button based on status
+    if (finalStatus === 'approved') {
+      approveBtn.classList.add('active');
+      approveBtn.textContent = '✓ Approved';
+      rejectBtn.textContent = 'Reject';
+      console.log(`✅ Approved ${diffType} diffs`);
+    } else if (finalStatus === 'rejected') {
+      rejectBtn.classList.add('active');
+      rejectBtn.textContent = '✗ Rejected';
+      approveBtn.textContent = 'Approve';
+      console.log(`❌ Rejected ${diffType} diffs`);
+    } else {
+      approveBtn.textContent = 'Approve';
+      rejectBtn.textContent = 'Reject';
+      console.log(`↩️ Reset ${diffType} diffs to neutral`);
+    }
+
+    // Update modal summary
+    updateModalSummary();
+  }
+
+  // Update modal summary based on current diff statuses
+  function updateModalSummary() {
+    const cards = document.querySelectorAll('.mcp-diff-card');
+    let approved = 0;
+    let rejected = 0;
+    let neutral = 0;
+
+    cards.forEach(card => {
+      const status = card.getAttribute('data-status');
+      if (status === 'approved') approved++;
+      else if (status === 'rejected') rejected++;
+      else neutral++;
+    });
+
+    const summaryText = document.getElementById('summaryText');
+    const total = cards.length;
+
+    if (approved === total) {
+      summaryText.textContent = `✅ All ${total} diff types approved`;
+      summaryText.style.color = '#28a745';
+    } else if (rejected === total) {
+      summaryText.textContent = `❌ All ${total} diff types rejected`;
+      summaryText.style.color = '#dc3545';
+    } else if (neutral === total) {
+      summaryText.textContent = `Review individual diff types above`;
+      summaryText.style.color = '#495057';
+    } else {
+      summaryText.textContent = `📊 ${approved} approved, ${rejected} rejected, ${neutral} pending`;
+      summaryText.style.color = '#007bff';
+    }
+  }
+
+
+
+  // Close modal with Escape key (global listener)
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+      const modal = document.getElementById('diffsModal');
+      if (modal.style.display === 'block') {
+        closeDiffsModal();
+      }
+    }
+  });
+
+  const getIframeUrls = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const publishedUrl = urlParams.get('published');
+    const editedUrl = urlParams.get('edited');
+    
+    let diffsRaw = null;
+    const diffParam = urlParams.get('diff');
+    if (diffParam) {
+      try {
+        diffsRaw = JSON.parse(decodeURIComponent(diffParam));
+        console.log('✅ Successfully parsed diffs from URL:', diffsRaw);
+      } catch (error) {
+        console.error('❌ Failed to parse diff parameter:', error);
+        console.log('Raw diff parameter:', diffParam);
+        diffsRaw = null;
+      }
+    } else {
+      console.log('⚠️  No diff parameter found in URL');
+    }
+    
+    console.log('diffsRaw', diffsRaw);
+    console.log('diffsRaw keys:', Object.keys(diffsRaw || {}));
+
+    // Make diffsRaw globally accessible
+    window.diffsRaw = diffsRaw;
+
+    // Check for additional diffs besides editor_diffs
+    if (diffsRaw) {
+      // Look for other diffs in the correct location
+      let searchLocation = diffsRaw;
+      if (diffsRaw.diffs) {
+        // New API structure - look inside the diffs wrapper
+        searchLocation = diffsRaw.diffs;
+        console.log('🔍 Looking for other diff types in diffsRaw.diffs');
+      } else {
+        console.log('🔍 Looking for other diff types in diffsRaw (legacy)');
+      }
+      
+      const allDiffTypes = Object.keys(searchLocation);
+      console.log('All diff types:', allDiffTypes);
+      const otherDiffTypes = allDiffTypes.filter(type => type === 'seo_diffs' || type === 'theme_diffs');
+      console.log('Other diff types (filtered):', otherDiffTypes);
+
+      // Always show the Other Diffs button
+      const otherDiffsBtn = document.getElementById('other-diffs-btn');
+      if (otherDiffsBtn) {
+        otherDiffsBtn.style.display = 'inline-block';
+        otherDiffsBtn.textContent = `Meta Data Diffs (${otherDiffTypes.length})`;
+        otherDiffsBtn.className += ' other-diffs';
+      }
+
+      if (otherDiffTypes.length > 0) {
+        console.log('Additional diff types found:', otherDiffTypes);
+
+        // Create object with only the additional diffs
+        const otherDiffs = {};
+        otherDiffTypes.forEach(type => {
+          otherDiffs[type] = searchLocation[type];
+          console.log(`Found ${type}:`, searchLocation[type]);
+        });
+
+        console.log('Complete otherDiffs object:', otherDiffs);
+        // Store globally for button access
+        window.otherDiffsData = otherDiffs;
+      } else {
+        // Store empty object when no other diffs
+        console.log('No other diff types found');
+        window.otherDiffsData = {};
+      }
+    }
+
+    const diffs = convertDiffs(diffsRaw);
+    console.log('diffs', diffs);
+    const ensureDsOrigin = (url) => {
+      if (!url) return null;
+      try {
+        const urlObj = new URL(url);
+        if (!urlObj.searchParams.has('dsOrigin')) {
+          urlObj.searchParams.set('dsOrigin', 'siteHistory');
+        }
+        return urlObj.toString();
+      } catch (error) {
+        console.warn('Invalid URL format:', url);
+        return null;
+      }
+    };
+    return {
+      publishedUrl: publishedUrl,
+      editedUrl: editedUrl,
+      diffs: diffs,
+    };
+  }
+
+  const addSlugToUrl = (url, slug) => {
+    try {
+      const urlObj = new URL(url);
+      const currentPath = urlObj.pathname;
+
+      // Normalize the current path (remove trailing slash except for root)
+      const normalizedCurrentPath = currentPath === '/' ? '' : currentPath.replace(/\/$/, '');
+
+      // Combine paths
+      urlObj.pathname = `${normalizedCurrentPath}${slug}`;
+
+      return urlObj.toString();
+    } catch (error) {
+      throw new Error(`Invalid URL provided: ${error.message}`);
+    }
+  }
+
+  // Get diffs and URLs from URL parameters
+  const { publishedUrl, editedUrl, diffs } = getIframeUrls();
+  
+  // Use mock URLs as fallback if not provided in URL params
+  const finalPublishedUrl = publishedUrl || 'https://browner3.wixstudio.com/shawnmace';
+  const finalEditedUrl = editedUrl || 'https://browner3.wixstudio.com/shawnmace?siteRevision=16';
+  
+  console.log('Using URLs - publishedUrl:', finalPublishedUrl, 'editedUrl:', finalEditedUrl);
+  console.log('Parsed diffs:', diffs);
+  
+  const iframe = document.getElementById('app-iframe');
+  iframe.src = `${finalPublishedUrl}/_api/enterprise/br-iframe-poc?published=${finalPublishedUrl}&edited=${finalEditedUrl}`;
+
+  let currentIndex = 0;
+  let reviewStatuses = new Array(diffs.length).fill(null);
+
+  function convertDiffs(input) {
+    const result = [];
+    if (!input) return result;
+    
+    // Handle the API response structure: input.diffs.editor_diffs
+    let diffs, pageMetaData;
+    if (input.diffs) {
+      // New API structure: { diffs: { editor_diffs: {...}, page_meta_data: [...] } }
+      diffs = input.diffs;
+      const editorDiffs = diffs.editor_diffs;
+      pageMetaData = diffs.page_meta_data || [];
+      
+      console.log('🎯 Found new API structure with diffs wrapper');
+      console.log('editorDiffs from diffs.editor_diffs:', editorDiffs);
+      console.log('pageMetaData from diffs.page_meta_data:', pageMetaData);
+      
+      // Use the wrapped structure
+      return convertDiffsInternal(editorDiffs, pageMetaData);
+    } else if (input.editor_diffs) {
+      // Legacy structure: { editor_diffs: {...}, page_meta_data: [...] }
+      console.log('📂 Using legacy API structure');
+      return convertDiffsInternal(input.editor_diffs, input.page_meta_data || []);
+    } else {
+      console.warn('⚠️ No editor_diffs found in input:', Object.keys(input));
+      return result;
+    }
+  }
+  
+  function convertDiffsInternal(editorDiffs, pageMetaData) {
+    const result = [];
+    if (!editorDiffs) {
+      console.warn('❌ editorDiffs is null or undefined');
+      return result;
+    }
+
+    console.log('editorDiffs', editorDiffs);
+    console.log('pageMetaData', pageMetaData);
+
+    const availableSlugs = pageMetaData.map(meta => meta.updatedSlug || meta.publishedSlug);
+    console.log('availableSlugs', availableSlugs);
+
+    const pageIds = Object.keys(editorDiffs);
+    console.log('pageIds from editor_diffs', pageIds);
+
+    // Create a mapping using page metadata when available
+    const pageIdToSlugMap = {};
+
+    // First, try to map using pageMetaData if it contains pageId information
+    if (pageMetaData.length > 0) {
+      pageMetaData.forEach(meta => {
+        if (meta.pageId) {
+          // Direct mapping if pageId is available in metadata
+          pageIdToSlugMap[meta.pageId] = meta.updatedSlug || meta.publishedSlug;
+        }
+      });
+    }
+
+    // For any unmapped pageIds, use a more intelligent assignment
+    pageIds.forEach((pageId, index) => {
+      if (!pageIdToSlugMap[pageId]) {
+        if (index < availableSlugs.length) {
+          // Try to match by checking if pageId contains hints about the page type
+          let assignedSlug = null;
+
+          // Check if pageId suggests it's the home page
+          if (pageId.toLowerCase().includes('home')) {
+            assignedSlug = availableSlugs.find(slug => slug === '/home' || slug === '/');
+          }
+          // Check if pageId suggests it's an about page
+          else if (pageId.toLowerCase().includes('about')) {
+            assignedSlug = availableSlugs.find(slug => slug.includes('about'));
+          }
+
+          // If no hint-based assignment, use remaining slugs
+          if (!assignedSlug) {
+            const remainingSlugs = availableSlugs.filter(slug =>
+              !Object.values(pageIdToSlugMap).includes(slug)
+            );
+            assignedSlug = remainingSlugs[0] || availableSlugs[index];
+          }
+
+          pageIdToSlugMap[pageId] = assignedSlug;
+        } else {
+          // Fallback if we have more pageIds than slugs
+          pageIdToSlugMap[pageId] = availableSlugs[0] || '/home';
+        }
+      }
+    });
+
+    console.log('pageIdToSlugMap', pageIdToSlugMap);
+
+    for (const pageId in editorDiffs) {
+      const components = editorDiffs[pageId];
+
+      // Get the slug for this pageId from our mapping
+      const slug = pageIdToSlugMap[pageId] || '/home'; // Default to home if not found
+
+      console.log(`PageId: ${pageId}, resolved slug: ${slug}`);
+
+      for (const componentId in components) {
+        const component = components[componentId];
+
+        const componentIds = Array.isArray(component.componentIds)
+          ? component.componentIds
+          : [componentId];
+
+        const componentType = component.component_type || '';
+        const diffList = component.diff_list || [];
+
+        for (const diff of diffList) {
+          componentIds.forEach(compId => {
+            result.push({
+              pageId,
+              componentId: compId,
+              before: diff.before,
+              after: diff.after,
+              componentType,
+              slug: slug,
+            });
+          });
+        }
+      }
+    }
+
+    // Sort the result array to put '/home' slug items at the beginning
+    result.sort((a, b) => {
+      if (a.slug === '/home' && b.slug !== '/home') {
+        return -1;
+      }
+      if (a.slug !== '/home' && b.slug === '/home') {
+        return 1;
+      }
+      return 0;
+    });
+
+    console.log('result', result);
+    return result;
+  }
+
+  // Utility function to strip HTML tags and keep only text
+  function stripHtmlTags(html) {
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    return div.textContent || div.innerText || '';
+  }
+
+
+
+
+  // Cross-layer communication manager
+  class TopLayerController {
+    constructor() {
+      this.iframe = null;
+      this.isReady = false;
+      this.setupMessageListener();
+      this.setupUI();
+
+      // Initialize UI immediately with local data
+      this.initializeUI();
+    }
+
+    setupMessageListener() {
+      window.addEventListener('message', (event) => {
+        console.log('📨 TopLayerController received message:', event.data);
+
+        if (!event.data || typeof event.data !== 'object') {
+          console.log('❌ Invalid message data, skipping');
+          return;
+        }
+
+        const { type, payload } = event.data;
+        console.log('📋 Message type:', type, 'payload:', payload);
+
+        switch (type) {
+          case 'CHILD_READY':
+            console.log('✅ MATCHED CHILD_READY case');
+            console.log('✅ Child iframe is ready, sending diffs data...');
+            console.log('🔍 Debug - this.iframe:', this.iframe);
+            console.log('🔍 Debug - diffs:', diffs);
+            if (this.iframe && this.iframe.contentWindow) {
+              this.iframe.contentWindow.postMessage({ type: 'DIFFS_DATA', diffs: diffs }, '*');
+              console.log('📤 Sent DIFFS_DATA to iframe:', diffs);
+            } else {
+              console.error('❌ Cannot send message - iframe not ready:', this.iframe);
+            }
+            break;
+
+          case 'CHILD_READY_RETRY':
+            console.log('🔄 MATCHED CHILD_READY_RETRY case');
+            console.log('🔄 Child iframe retry request, resending diffs data...');
+            console.log('🔍 Debug - this.iframe:', this.iframe);
+            console.log('🔍 Debug - diffs:', diffs);
+            if (this.iframe && this.iframe.contentWindow) {
+              this.iframe.contentWindow.postMessage({ type: 'DIFFS_DATA', diffs: diffs }, '*');
+              console.log('📤 Sent DIFFS_DATA to iframe:', diffs);
+            } else {
+              console.error('❌ Cannot send message - iframe not ready:', this.iframe);
+            }
+            break;
+
+          case 'MIDDLE_LAYER_READY':
+            console.log('✅ Middle layer is ready');
+            this.isReady = true;
+            this.highlightCurrentComponent();
+            break;
+
+          case 'PONG':
+            console.log('🏓 Received pong from middle layer:', payload);
+            break;
+
+          case 'ELEMENT_HIGHLIGHTED':
+            console.log('✅ Element highlighted successfully:', payload);
+            break;
+
+          case 'ELEMENT_UNHIGHLIGHTED':
+            console.log('🧹 Element unhighlighted successfully:', payload);
+            break;
+
+          default:
+            console.log('❓ Unknown message type:', type);
+        }
+      });
+    }
+
+    setupUI() {
+      this.iframe = document.getElementById('app-iframe');
+
+      // Wait for iframe to load
+      this.iframe.addEventListener('load', () => {
+        console.log('📦 Iframe loaded, sending ping...');
+        setTimeout(() => {
+          this.sendToMiddleLayer('PING', {
+            message: 'Hello from top layer',
+            timestamp: Date.now()
+          });
+        }, 1000);
+
+        // Don't send diffs immediately - wait for CHILD_READY signal
+        console.log('📦 Iframe loaded, waiting for child ready signal...');
+      });
+
+      // Setup button handlers
+      document.getElementById('approve-btn').addEventListener('click', () => {
+        this.handleApprove();
+      });
+
+      document.getElementById('reject-btn').addEventListener('click', () => {
+        this.handleReject();
+      });
+
+      document.getElementById('prev-btn').addEventListener('click', () => {
+        this.handlePrevious();
+      });
+
+      document.getElementById('next-btn').addEventListener('click', () => {
+        this.handleNext();
+      });
+
+      // Add handler for the new first button
+      document.getElementById('first-btn').addEventListener('click', () => {
+        this.handleFirst();
+      });
+
+
+
+      // Add handler for the other diffs button
+      document.getElementById('other-diffs-btn').addEventListener('click', () => {
+        this.showOtherDiffs();
+      });
+    }
+
+    // Initialize UI with local data immediately
+    initializeUI() {
+      console.log('🔄 Controller taking over UI management');
+      // this.updateUI();
+      console.log('📊 Data loaded:', {
+        totalComponents: diffs.length,
+        currentIndex: currentIndex,
+        currentComponent: diffs[currentIndex]
+      });
+    }
+
+    sendToMiddleLayer(type, payload) {
+      if (this.iframe && this.iframe.contentWindow) {
+        console.log(`📤 Sending to middle layer:`, { type, payload });
+        this.iframe.contentWindow.postMessage({ type, payload }, '*');
+      } else {
+        console.error('❌ Cannot send to middle layer - iframe not ready');
+      }
+    }
+
+    updateUI() {
+      if (diffs.length === 0) return;
+
+      const currentItem = diffs[currentIndex];
+
+      // Update panel title with enhanced info
+      const pageInfo = currentItem.pageId ? ` (Page: ${currentItem.pageId})` : '';
+      console.log("pageInfo", pageInfo);
+      console.log("currentItem", currentItem);
+      document.getElementById('panel-title').textContent =
+        `Item ${currentIndex + 1} of ${diffs.length}${pageInfo}`;
+
+      // Update component type badge with enhanced styling
+      const badge = document.getElementById('component-type-badge');
+      badge.textContent = currentItem.componentType;
+
+      // Add type-specific badge styling
+      badge.className = 'component-badge';
+      if (currentItem.componentType === 'Text') {
+        badge.style.backgroundColor = '#4CAF50';
+        badge.style.color = 'white';
+      } else if (currentItem.componentType === 'Image') {
+        badge.style.backgroundColor = '#FF9800';
+        badge.style.color = 'white';
+      } else {
+        badge.style.backgroundColor = '#e9ecef';
+        badge.style.color = '#495057';
+      }
+
+      // Update before/after text
+      const beforeText = document.getElementById('before-text');
+      const afterText = document.getElementById('after-text');
+
+      beforeText.textContent = stripHtmlTags(currentItem.before);
+      afterText.textContent = stripHtmlTags(currentItem.after);
+
+      // Add change type indicators
+      const changeLength = currentItem.after.length - currentItem.before.length;
+      const changeIndicator = changeLength > 0 ? ' 📈' : changeLength < 0 ? ' 📉' : ' ➡️';
+      afterText.textContent += changeIndicator;
+
+      // Update button states
+      this.updateButtonStates();
+
+      // Update navigation button states
+      document.getElementById('prev-btn').disabled = currentIndex === 0;
+      document.getElementById('next-btn').disabled = currentIndex === diffs.length - 1;
+
+      // Log current component details
+      console.log('🎯 Current Component:', {
+        componentId: currentItem.componentId,
+        componentType: currentItem.componentType,
+        pageId: currentItem.pageId || 'main',
+        index: currentIndex,
+        changeLength: changeLength
+      });
+    }
+
+    updateButtonStates() {
+      const approveBtn = document.getElementById('approve-btn');
+      const rejectBtn = document.getElementById('reject-btn');
+
+      // Reset classes
+      approveBtn.className = 'button approveButton';
+      rejectBtn.className = 'button rejectButton';
+
+      const status = reviewStatuses[currentIndex];
+      if (status === 'approved') {
+        approveBtn.className += ' approved';
+        rejectBtn.className += ' disabled';
+        rejectBtn.disabled = true;
+        approveBtn.disabled = false;
+      } else if (status === 'rejected') {
+        rejectBtn.className += ' rejected';
+        approveBtn.className += ' disabled';
+        approveBtn.disabled = true;
+        rejectBtn.disabled = false;
+      } else {
+        approveBtn.disabled = false;
+        rejectBtn.disabled = false;
+      }
+    }
+
+    // NEW: Highlight current component
+    highlightCurrentComponent() {
+      console.log('[DEBUG] highlightCurrentComponent called', diffs[currentIndex]);
+      if (!this.isReady) {
+        console.log('⏳ Middle layer not ready yet, will highlight when ready...');
+        return;
+      }
+
+      const currentItem = diffs[currentIndex];
+      console.log('🔍 Highlighting current component:', currentItem);
+
+      this.sendToMiddleLayer('HIGHLIGHT_COMPONENT_REQUEST', {
+        componentId: currentItem.componentId,
+        pageId: currentItem.pageId,
+        slug: currentItem.slug,
+        componentType: currentItem.componentType,
+        before: currentItem.before,
+        after: currentItem.after,
+        index: currentIndex,
+        timestamp: Date.now()
+      });
+    }
+
+    // NEW: Unhighlight current component
+    unhighlightCurrentComponent() {
+      if (!this.isReady) return;
+
+      const currentItem = diffs[currentIndex];
+      console.log('🧹 Unhighlighting current component:', currentItem.componentId);
+
+      this.sendToMiddleLayer('UNHIGHLIGHT_COMPONENT', {
+        componentId: currentItem.componentId,
+        componentType: currentItem.componentType,
+        timestamp: Date.now()
+      });
+    }
+
+    handleApprove() {
+      reviewStatuses[currentIndex] = reviewStatuses[currentIndex] === 'approved' ? null : 'approved';
+      this.updateButtonStates();
+
+      const currentItem = diffs[currentIndex];
+
+      console.log('✅ Approved component:', {
+        componentId: currentItem.componentId,
+        componentType: currentItem.componentType,
+        status: reviewStatuses[currentIndex]
+      });
+    }
+
+    handleReject() {
+      reviewStatuses[currentIndex] = reviewStatuses[currentIndex] === 'rejected' ? null : 'rejected';
+      this.updateButtonStates();
+
+      const currentItem = diffs[currentIndex];
+
+      console.log('❌ Rejected component:', {
+        componentId: currentItem.componentId,
+        componentType: currentItem.componentType,
+        status: reviewStatuses[currentIndex]
+      });
+    }
+
+    handleNext() {
+      if (currentIndex < diffs.length - 1) {
+        console.log('➡️ Navigating to next component');
+
+        // Unhighlight current component
+        this.unhighlightCurrentComponent();
+
+        // Update index
+        currentIndex++;
+
+        // Update UI immediately
+        this.updateUIDirectly();
+
+        // Send post message to index.ejs
+        this.sendPostMessageToIndexEjs();
+
+        // Highlight new component in current layer
+        this.highlightCurrentComponent();
+      }
+    }
+
+    handlePrevious() {
+      if (currentIndex > 0) {
+        console.log('⬅️ Navigating to previous component');
+
+        // Unhighlight current component
+        this.unhighlightCurrentComponent();
+
+        // Update index
+        currentIndex--;
+
+        // Update UI immediately
+        this.updateUIDirectly();
+
+        // Send post message to index.ejs
+        this.sendPostMessageToIndexEjs();
+
+        // Highlight new component in current layer
+        this.highlightCurrentComponent();
+      }
+    }
+
+    // Add a method to handle going to the first item
+    handleFirst() {
+      if (currentIndex !== 0) {
+        this.unhighlightCurrentComponent();
+      }
+      currentIndex = 0;
+      this.updateUIDirectly();
+      this.sendPostMessageToIndexEjs();
+      this.highlightCurrentComponent();
+    }
+
+    // FIXED: Simple post message to index.ejs
+    sendPostMessageToIndexEjs() {
+      const currentItem = diffs[currentIndex];
+      console.log('📤 Sending highlight message to index.ejs:', currentItem);
+
+      if (this.iframe && this.iframe.contentWindow) {
+        const message = {
+          componentId: currentItem.componentId,
+          pageId: currentItem.pageId,
+          action: 'highlight'
+        };
+
+        console.log('📤 Posting message:', message);
+        this.iframe.contentWindow.postMessage(message, '*');
+        console.log('✅ Message posted successfully');
+      } else {
+        console.error('❌ Cannot send message to index.ejs - iframe not ready');
+        console.log('iframe:', this.iframe);
+        console.log('iframe.contentWindow:', this.iframe?.contentWindow);
+      }
+    }
+
+    // Direct UI update method that definitely works
+    updateUIDirectly() {
+      const currentItem = diffs[currentIndex];
+      console.log("currentItem in updateUIDirectly", currentItem);
+      console.log('🔄 Updating UI directly with item:', currentIndex, currentItem);
+
+      // Direct DOM updates
+      document.getElementById('panel-title').textContent =
+        `Compliance Review - Item ${currentIndex + 1} of ${diffs.length}`;
+      document.getElementById('component-type-badge').textContent = currentItem.componentType;
+      document.getElementById('before-text').textContent = stripHtmlTags(currentItem.before);
+      document.getElementById('after-text').textContent = stripHtmlTags(currentItem.after);
+
+      // Update badge styling
+      const badge = document.getElementById('component-type-badge');
+      if (currentItem.componentType === 'Text') {
+        badge.style.backgroundColor = '#4CAF50';
+        badge.style.color = 'white';
+      } else if (currentItem.componentType === 'Image') {
+        badge.style.backgroundColor = '#FF9800';
+        badge.style.color = 'white';
+      }
+
+      // Update navigation buttons
+      document.getElementById('prev-btn').disabled = currentIndex === 0;
+      document.getElementById('next-btn').disabled = currentIndex === diffs.length - 1;
+
+      // Reset button states and restore from reviewStatuses
+      this.updateButtonStates();
+
+      console.log('✅ UI updated successfully');
+    }
+
+    showStatus(message, className = '') {
+      // Remove existing status
+      const existing = document.querySelector('.status-indicator');
+      if (existing) {
+        existing.remove();
+      }
+
+      // Add new status
+      const status = document.createElement('div');
+      status.className = `status-indicator ${className}`;
+      status.textContent = message;
+      document.body.appendChild(status);
+
+      // Auto-remove after 3 seconds
+      setTimeout(() => {
+        if (status.parentNode) {
+          status.parentNode.removeChild(status);
+        }
+      }, 3000);
+    }
+
+
+
+    // Show modal with additional diffs
+    showOtherDiffs() {
+      console.log('showOtherDiffs called');
+      const otherDiffs = window.otherDiffsData; // Use the globally accessible data
+      console.log('otherDiffsData:', otherDiffs);
+      console.log('otherDiffsData keys:', Object.keys(otherDiffs || {}));
+
+      if (otherDiffs && Object.keys(otherDiffs).length > 0) {
+        console.log('Opening modal with diff types:', Object.keys(otherDiffs));
+        openDiffsModal(otherDiffs);
+      } else {
+        console.log('No other diffs to show');
+        alert('No meta data diffs found (SEO or Theme changes).');
+      }
+    }
+  }
+
+  // Initialize immediately and populate UI with data
+  function initializeTopController() {
+    // setupDiffsMessageListener(); // Removed as per edit hint
+
+    console.log('🚀 Initializing TopLayerController...');
+    console.log('📋 DOM Ready State:', document.readyState);
+
+    // Populate UI immediately with first item data, if available
+    if (diffs.length > 0) {
+      const firstItem = diffs[0];
+      console.log('📊 Populating UI with first item:', firstItem);
+
+      // Update UI elements directly
+      document.getElementById('panel-title').textContent = `Compliance Review - Item 1 of ${diffs.length}`;
+      document.getElementById('component-type-badge').textContent = firstItem.componentType;
+      document.getElementById('before-text').textContent = stripHtmlTags(firstItem.before);
+      document.getElementById('after-text').textContent = stripHtmlTags(firstItem.after);
+
+      // Style the badge based on component type
+      const badge = document.getElementById('component-type-badge');
+      if (firstItem.componentType === 'Text') {
+        badge.style.backgroundColor = '#4CAF50';
+        badge.style.color = 'white';
+      } else if (firstItem.componentType === 'Image') {
+        badge.style.backgroundColor = '#FF9800';
+        badge.style.color = 'white';
+      }
+
+      // Set button states
+      document.getElementById('prev-btn').disabled = true; // First item
+      document.getElementById('next-btn').disabled = diffs.length <= 1;
+      document.getElementById('other-diffs-btn').style.display = 'inline-block'; // Always show
+      document.getElementById('other-diffs-btn').textContent = 'Meta Data Diffs'; // Default text
+
+      console.log('✅ UI populated with initial data');
+    } else {
+      // No diffs available yet
+      document.getElementById('panel-title').textContent = 'Compliance Review - No items';
+      document.getElementById('component-type-badge').textContent = '—';
+      document.getElementById('before-text').textContent = '';
+      document.getElementById('after-text').textContent = '';
+      document.getElementById('prev-btn').disabled = true;
+      document.getElementById('next-btn').disabled = true;
+      document.getElementById('other-diffs-btn').style.display = 'inline-block'; // Always show
+      document.getElementById('other-diffs-btn').textContent = 'Meta Data Diffs'; // Default text
+    }
+
+    // Initialize the controller
+    const topController = new TopLayerController();
+    console.log('🚀 Top layer (playcode-wrapper.html) initialized with local data');
+
+    // Make controller globally accessible
+    window.topController = topController;
+
+    // Ensure the iframe is loaded before highlighting the first item
+    const iframe = document.getElementById('app-iframe');
+    function highlightWhenReady() {
+      if (iframe && iframe.contentWindow && iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {
+        console.log('[DEBUG] Iframe already loaded, highlighting');
+        topController.highlightCurrentComponent();
+      } else {
+        console.log('[DEBUG] Waiting for iframe to load');
+        iframe.addEventListener('load', () => {
+          console.log('[DEBUG] Iframe load event fired, highlighting');
+          topController.highlightCurrentComponent();
+        }, { once: true });
+      }
+    }
+    highlightWhenReady();
+  }
+
+  // Initialize after DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeTopController);
+  } else {
+    // DOM is already ready
+    initializeTopController();
+  }
+</script>
+</body>
+</html>
