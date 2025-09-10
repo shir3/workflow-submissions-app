@@ -201,9 +201,7 @@ Content-Type: application/json
 POST /api/submissions/query-diffs
 Content-Type: application/json
 
-{
-  "submission_id": "required-submission-id"
-}
+{}
 ```
 
 #### Approve Submission
