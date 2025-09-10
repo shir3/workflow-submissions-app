@@ -1344,8 +1344,16 @@
 
   const getIframeUrls = () => {
     const urlParams = new URLSearchParams(window.location.search);
-    const publishedUrl = urlParams.get('published');
-    const editedUrl = urlParams.get('edited');
+    const publishedUrl = urlParams.get('publishedUrl');
+    const editedUrl = urlParams.get('editedUrl');
+    const baseUrl = urlParams.get('url');
+    
+    console.log('🔍 URL Parameters:', {
+      publishedUrl,
+      editedUrl,
+      baseUrl,
+      allParams: Object.fromEntries(urlParams)
+    });
     
     let diffsRaw = null;
     const diffParam = urlParams.get('diff');
@@ -1429,8 +1437,9 @@
       }
     };
     return {
-      publishedUrl: publishedUrl,
-      editedUrl: editedUrl,
+      publishedUrl: publishedUrl || baseUrl,
+      editedUrl: editedUrl || baseUrl,
+      baseUrl: baseUrl,
       diffs: diffs,
     };
   }
@@ -1453,17 +1462,22 @@
   }
 
   // Get diffs and URLs from URL parameters
-  const { publishedUrl, editedUrl, diffs } = getIframeUrls();
+  const { publishedUrl, editedUrl, baseUrl, diffs } = getIframeUrls();
   
-  // Use mock URLs as fallback if not provided in URL params
+  // Use the actual URLs from the API, with fallback to mock URLs only if none are provided
   const finalPublishedUrl = publishedUrl || 'https://browner3.wixstudio.com/shawnmace';
   const finalEditedUrl = editedUrl || 'https://browner3.wixstudio.com/shawnmace?siteRevision=16';
   
-  console.log('Using URLs - publishedUrl:', finalPublishedUrl, 'editedUrl:', finalEditedUrl);
-  console.log('Parsed diffs:', diffs);
+  console.log('🎯 Final URLs being used:', {
+    publishedUrl: finalPublishedUrl,
+    editedUrl: finalEditedUrl,
+    baseUrl: baseUrl,
+    usingFallback: !publishedUrl && !editedUrl
+  });
+  console.log('📊 Parsed diffs:', diffs);
   
   const iframe = document.getElementById('app-iframe');
-  iframe.src = `${finalPublishedUrl}/_api/enterprise/br-iframe-poc?published=${finalPublishedUrl}&edited=${finalEditedUrl}`;
+  iframe.src = `${finalPublishedUrl}/_api/enterprise/br-iframe-poc?published=${encodeURIComponent(finalPublishedUrl)}&edited=${encodeURIComponent(finalEditedUrl)}`;
 
   let currentIndex = 0;
   let reviewStatuses = new Array(diffs.length).fill(null);

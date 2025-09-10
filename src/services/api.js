@@ -9,6 +9,38 @@ const createHeaders = () => {
   return headers;
 };
 
+// Extract URLs from enriched submissions response
+const extractUrls = (submission) => {
+  const url = submission?.url;
+  const requestedRevision = submission?.revisions?.requestedRevision;
+  
+  if (!url) {
+    return { publishedUrl: null, editedUrl: null };
+  }
+  
+  const publishedUrl = url;
+  const editedUrl = requestedRevision ? `${url}?siteRevision=${requestedRevision}` : url;
+  
+  return { publishedUrl, editedUrl };
+};
+
+// Process enriched submissions data
+const processEnrichedSubmissions = (data) => {
+  if (!data || !data.enrichedSubmissions) {
+    return [];
+  }
+  
+  return data.enrichedSubmissions.map(submission => {
+    const { publishedUrl, editedUrl } = extractUrls(submission);
+    
+    return {
+      ...submission,
+      publishedUrl,
+      editedUrl
+    };
+  });
+};
+
 export const querySubmissions = async (submissionId = "a2881742-6bd1-4aff-b73a-da5de1011dcc") => {
   const requestOptions = {
     method: "POST",
@@ -27,7 +59,16 @@ export const querySubmissions = async (submissionId = "a2881742-6bd1-4aff-b73a-d
     }
     
     const result = await response.json();
-    return result;
+    
+    // Process enriched submissions to extract URLs
+    const processedSubmissions = processEnrichedSubmissions(result);
+    
+    // Return the processed data in the expected format
+    return {
+      ...result,
+      submissions: processedSubmissions,
+      enrichedSubmissions: processedSubmissions // Keep both for compatibility
+    };
   } catch (error) {
     console.error("Error querying submissions:", error);
     throw error;

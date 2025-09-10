@@ -118,6 +118,20 @@
   color: #0056b3;
 }
 
+.url-link {
+  display: inline-block;
+  padding: 4px 8px;
+  background-color: #e7f3ff;
+  border-radius: 4px;
+  font-size: 11px;
+  transition: all 0.2s ease;
+}
+
+.url-link:hover {
+  background-color: #cce7ff;
+  transform: translateY(-1px);
+}
+
 .loading,
 .error,
 .no-data {
@@ -152,7 +166,7 @@
   }
   
   .submissions-table {
-    min-width: 700px;
+    min-width: 1000px;
   }
   
   .submissions-table th,

@@ -9,10 +9,15 @@ const SubmissionsTable = ({ submissions, onRowClick, loading, error }) => {
     const params = {
       id: submission.id,
       msid: submission.msid,
-      publishedRevision: submission.siteRevisions?.publishedRevision,
-      requestedRevision: submission.siteRevisions?.requestedRevision,
+      publishedRevision: submission.siteRevisions?.publishedRevision || submission.revisions?.publishedRevision,
+      requestedRevision: submission.siteRevisions?.requestedRevision || submission.revisions?.requestedRevision,
       status: submission.status,
-      comment: submission.userPayload?.comment
+      comment: submission.userPayload?.comment,
+      userId: submission.userData?.user_id,
+      userEmail: submission.userData?.user_email,
+      publishedUrl: submission.publishedUrl,
+      editedUrl: submission.editedUrl,
+      url: submission.url
     };
     
     // Set loading state for this specific row
@@ -57,11 +62,13 @@ const SubmissionsTable = ({ submissions, onRowClick, loading, error }) => {
         <thead>
           <tr>
             <th>ID</th>
-            <th>Status</th>
             <th>Comment</th>
             <th>Created At</th>
             <th>Published Rev</th>
             <th>Requested Rev</th>
+            <th>User Email</th>
+            <th>Published URL</th>
+            <th>Edited URL</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -73,11 +80,6 @@ const SubmissionsTable = ({ submissions, onRowClick, loading, error }) => {
               onClick={() => handleRowClick(submission)}
             >
               <td title={submission.id}>{submission.id ? submission.id.substring(0, 8) + '...' : 'N/A'}</td>
-              <td>
-                <span className={`status ${submission.status?.toLowerCase().replace('submission_status_', '')}`}>
-                  {submission.status ? submission.status.replace('SUBMISSION_STATUS_', '').replace('_', ' ') : 'Unknown'}
-                </span>
-              </td>
               <td title={submission.userPayload?.comment}>
                 {submission.userPayload?.comment ? 
                   (submission.userPayload.comment.length > 30 ? 
@@ -87,8 +89,25 @@ const SubmissionsTable = ({ submissions, onRowClick, loading, error }) => {
                 }
               </td>
               <td>{submission.createdDate ? new Date(submission.createdDate).toLocaleString() : 'N/A'}</td>
-              <td>{submission.siteRevisions?.publishedRevision || 'N/A'}</td>
-              <td>{submission.siteRevisions?.requestedRevision || 'N/A'}</td>
+              <td>{submission.siteRevisions?.publishedRevision || submission.revisions?.publishedRevision || 'N/A'}</td>
+              <td>{submission.siteRevisions?.requestedRevision || submission.revisions?.requestedRevision || 'N/A'}</td>
+              <td>{submission.userData?.user_email || 'N/A'}</td>
+              <td>
+                {submission.publishedUrl ? (
+                  <a href={submission.publishedUrl} target="_blank" rel="noopener noreferrer" 
+                     onClick={(e) => e.stopPropagation()} className="url-link">
+                    View Published
+                  </a>
+                ) : 'N/A'}
+              </td>
+              <td>
+                {submission.editedUrl ? (
+                  <a href={submission.editedUrl} target="_blank" rel="noopener noreferrer" 
+                     onClick={(e) => e.stopPropagation()} className="url-link">
+                    View Edited
+                  </a>
+                ) : 'N/A'}
+              </td>
               <td>
                 <button 
                   className="action-button"

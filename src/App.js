@@ -10,7 +10,19 @@ function App() {
 
   // Function to open iframe page with query parameters and diffs
   const handleRowClick = async (params) => {
-    const { id, msid, publishedRevision, requestedRevision, status, comment } = params;
+    const { 
+      id, 
+      msid, 
+      publishedRevision, 
+      requestedRevision, 
+      status, 
+      comment, 
+      publishedUrl,
+      editedUrl,
+      url,
+      userId,
+      userEmail
+    } = params;
 
     try {
       // 1) Fetch diffs for this submission
@@ -24,7 +36,12 @@ function App() {
         publishedRevision: publishedRevision || '',
         requestedRevision: requestedRevision || '',
         status: status || '',
-        comment: comment || ''
+        comment: comment || '',
+        publishedUrl: publishedUrl || '',
+        editedUrl: editedUrl || '',
+        url: url || '',
+        userId: userId || '',
+        userEmail: userEmail || ''
       });
 
       // Important: Keep diffs small enough for URL. We'll encode as a compact string.
@@ -35,6 +52,7 @@ function App() {
       const iframePageUrl = `${window.location.origin}/iframe-poc.html?${queryParams.toString()}`;
 
       console.log('Opening iframe page:', iframePageUrl);
+      console.log('URLs extracted:', { publishedUrl, editedUrl, url });
       window.open(iframePageUrl, '_blank');
     } catch (err) {
       console.error('Failed to load diffs for submission', id, err);
