@@ -94,9 +94,9 @@
   font-weight: 700;
 }
 
-.col-site { width: 28%; }
+.col-site { width: 26%; }
 .col-revision { width: 8%; }
-.col-status { width: 12%; }
+.col-status { width: 14%; }
 .col-date { width: 14%; }
 .col-comment { width: 20%; }
 .col-sent-by { width: 9%; }
@@ -120,9 +120,18 @@
   color: #0f172a;
 }
 
+.table-row {
+  position: relative;
+}
+
 .table-row:hover {
   background: #f8fafc;
   cursor: pointer;
+}
+
+.table-row:hover .publish-button {
+  opacity: 1;
+  visibility: visible;
 }
 
 .table-row.loading {
@@ -216,6 +225,41 @@
 .comment-text .no-comment {
   color: #94a3b8;
   font-style: italic;
+}
+
+/* Publish button */
+.publish-button {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  background: #16a34a;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.publish-button:hover {
+  background: #15803d;
+  transform: translateY(-50%) scale(1.05);
+}
+
+.publish-button:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: translateY(-50%);
+}
+
+.publish-button.loading {
+  background: #6b7280;
 }
 
 /* Empty state */
