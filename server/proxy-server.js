@@ -15,15 +15,15 @@ app.use(express.json());
 
 // Debug environment variables
 console.log('🔍 Environment Variables Debug:');
-console.log('REACT_APP_WIX_ACCOUNT_ID:', process.env.REACT_APP_WIX_ACCOUNT_ID ? 'SET' : 'MISSING');
-console.log('REACT_APP_WIX_AUTH:', process.env.REACT_APP_WIX_AUTH ? 'SET' : 'MISSING');
-console.log('REACT_APP_WIX_XSRF:', process.env.REACT_APP_WIX_XSRF ? 'SET' : 'MISSING');
+console.log('WIX_ACCOUNT_ID:', process.env.WIX_ACCOUNT_ID ? 'SET' : 'MISSING');
+console.log('WIX_AUTHORIZATION:', process.env.WIX_AUTHORIZATION ? 'SET' : 'MISSING');
+console.log('WIX_XSRF_TOKEN:', process.env.WIX_XSRF_TOKEN ? 'SET' : 'MISSING');
 
-// API Configuration - Updated for enriched-submissions API
+// API Configuration - Using environment variables for security
 const API_CONFIG = {
-  wixAccountId: "18e546b2-4f3a-4b5d-939f-51d15da11076",
-  authorization: "IST.eyJraWQiOiJQb3pIX2FDMiIsImFsZyI6IlJTMjU2In0.eyJkYXRhIjoie1wiaWRcIjpcIjg5ZDNiNzNmLTMzYzAtNDk1Ny04YWIzLWNmOGYyZmJjOWJjNVwiLFwiaWRlbnRpdHlcIjp7XCJ0eXBlXCI6XCJhcHBsaWNhdGlvblwiLFwiaWRcIjpcIjg3YjlmZGU2LTRkNWYtNDNiMS05YmUzLWMzNjJjZmEwYzcyOVwifSxcInRlbmFudFwiOntcInR5cGVcIjpcImFjY291bnRcIixcImlkXCI6XCIxOGU1NDZiMi00ZjNhLTRiNWQtOTM5Zi01MWQxNWRhMTEwNzZcIn19IiwiaWF0IjoxNzU3NDg5NTE3fQ.c_UZYd9kOZGtTdqk7pyaUDsgRtHo74RjdFCz9s6186Uz31XwsKJhjiWPVsubx5_vbmzSETd6paQY78kiw45p4aRBdLyAWu6ihrizGx1apaXU5X6teJl_H7HMWmDijsucba7wrWJXFMf7IkMcBnb1giylMj_AFF1ln1Y46Jv7vvCUeT0oISbNgu-9MHOV4EWCF4QijgM8Ma5qWF4l0zSnIUAJkUYw-euHRwThpTteXR0tR2cmPgH3i1XSM2VRycg0GmDraFXSAbmlvM7W9DMv5UGrCGe2cng5XONYaqR_hgHBvvmOsX9BpYo7S8gX4Dj09frNGCq6BJXZ179Gz9tqQw",
-  xsrfToken: "1757489563|cPslBDSABx7m"
+  wixAccountId: process.env.WIX_ACCOUNT_ID || "18e546b2-4f3a-4b5d-939f-51d15da11076",
+  authorization: process.env.WIX_AUTHORIZATION || "IST.eyJraWQiOiJQb3pIX2FDMiIsImFsZyI6IlJTMjU2In0.eyJkYXRhIjoie1wiaWRcIjpcIjg5ZDNiNzNmLTMzYzAtNDk1Ny04YWIzLWNmOGYyZmJjOWJjNVwiLFwiaWRlbnRpdHlcIjp7XCJ0eXBlXCI6XCJhcHBsaWNhdGlvblwiLFwiaWRcIjpcIjg3YjlmZGU2LTRkNWYtNDNiMS05YmUzLWMzNjJjZmEwYzcyOVwifSxcInRlbmFudFwiOntcInR5cGVcIjpcImFjY291bnRcIixcImlkXCI6XCIxOGU1NDZiMi00ZjNhLTRiNWQtOTM5Zi01MWQxNWRhMTEwNzZcIn19IiwiaWF0IjoxNzU3NDg5NTE3fQ.c_UZYd9kOZGtTdqk7pyaUDsgRtHo74RjdFCz9s6186Uz31XwsKJhjiWPVsubx5_vbmzSETd6paQY78kiw45p4aRBdLyAWu6ihrizGx1apaXU5X6teJl_H7HMWmDijsucba7wrWJXFMf7IkMcBnb1giylMj_AFF1ln1Y46Jv7vvCUeT0oISbNgu-9MHOV4EWCF4QijgM8Ma5qWF4l0zSnIUAJkUYw-euHRwThpTteXR0tR2cmPgH3i1XSM2VRycg0GmDraFXSAbmlvM7W9DMv5UGrCGe2cng5XONYaqR_hgHBvvmOsX9BpYo7S8gX4Dj09frNGCq6BJXZ179Gz9tqQw",
+  xsrfToken: process.env.WIX_XSRF_TOKEN || "1757489563|cPslBDSABx7m"
 };
 
 // Debug API config
