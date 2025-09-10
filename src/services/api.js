@@ -103,3 +103,33 @@ export const queryDiffs = async (submissionId) => {
     throw error;
   }
 };
+
+export const approveSubmission = async (submissionId, approverUserEmail = "br.owner1@test.com") => {
+  if (!submissionId) {
+    throw new Error('submission_id is required for approving submissions');
+  }
+  
+  const requestOptions = {
+    method: "POST",
+    headers: createHeaders(),
+    body: JSON.stringify({
+      submission_id: submissionId,
+      approver_user_email: approverUserEmail
+    })
+  };
+
+  try {
+    const response = await fetch(`${PROXY_BASE_URL}/api/submissions/approve`, requestOptions);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error("Error approving submission:", error);
+    throw error;
+  }
+};

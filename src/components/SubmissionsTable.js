@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './SubmissionsTable.css';
+import { approveSubmission } from '../services/api';
 
 // Avatar component for users
 const Avatar = ({ name, color = '#3B82F6' }) => {
@@ -81,38 +82,19 @@ const SubmissionsTable = ({ submissions, onRowClick, loading, error }) => {
     setPublishingRowId(submission.id);
     
     try {
-      const myHeaders = new Headers();
-      myHeaders.append("wix-account-id", "18e546b2-4f3a-4b5d-939f-51d15da11076");
-      myHeaders.append("Content-Type", "application/json");
-      myHeaders.append("Authorization", "IST.eyJraWQiOiJQb3pIX2FDMiIsImFsZyI6IlJTMjU2In0.eyJkYXRhIjoie1wiaWRcIjpcIjg5ZDNiNzNmLTMzYzAtNDk1Ny04YWIzLWNmOGYyZmJjOWJjNVwiLFwiaWRlbnRpdHlcIjp7XCJ0eXBlXCI6XCJhcHBsaWNhdGlvblwiLFwiaWRcIjpcIjg3YjlmZGU2LTRkNWYtNDNiMS05YmUzLWMzNjJjZmEwYzcyOVwifSxcInRlbmFudFwiOntcInR5cGVcIjpcImFjY291bnRcIixcImlkXCI6XCIxOGU1NDZiMi00ZjNhLTRiNWQtOTM5Zi01MWQxNWRhMTEwNzZcIn19IiwiaWF0IjoxNzU3NDg5NTE3fQ.c_UZYd9kOZGtTdqk7pyaUDsgRtHo74RjdFCz9s6186Uz31XwsKJhjiWPVsubx5_vbmzSETd6paQY78kiw45p4aRBdLyAWu6ihrizGx1apaXU5X6teJl_H7HMWmDijsucba7wrWJXFMf7IkMcBnb1giylMj_AFF1ln1Y46Jv7vvCUeT0oISbNgu-9MHOV4EWCF4QijgM8Ma5qWF4l0zSnIUAJkUYw-euHRwThpTteXR0tR2cmPgH3i1XSM2VRycg0GmDraFXSAbmlvM7W9DMv5UGrCGe2cng5XONYaqR_hgHBvvmOsX9BpYo7S8gX4Dj09frNGCq6BJXZ179Gz9tqQw");
-      myHeaders.append("Cookie", "XSRF-TOKEN=1757489563|cPslBDSABx7m");
-
-      const raw = JSON.stringify({
-        "approver_user_email": "br.owner1@test.com",
-        "submission_id": submission.id
-      });
-
-      const requestOptions = {
-        method: "POST",
-        headers: myHeaders,
-        body: raw,
-        redirect: "follow"
-      };
-
-      const response = await fetch("https://www.wixapis.com/enterprise/workflow/v1/submissions/approval", requestOptions);
-      const result = await response.text();
+      const result = await approveSubmission(submission.id);
       
       console.log('Publish result:', result);
       
-      if (response.ok) {
+      if (result.success || result.message) {
         alert('Successfully published!');
-        // Optionally refresh the data here
+        // Optionally refresh the data here by calling a refresh function
       } else {
-        alert('Failed to publish. Please try again.');
+        alert('Publish completed, but response was unclear. Please check the submission status.');
       }
     } catch (error) {
       console.error('Publish error:', error);
-      alert('Failed to publish. Please try again.');
+      alert(`Failed to publish: ${error.message}`);
     } finally {
       setPublishingRowId(null);
     }
@@ -261,14 +243,6 @@ const SubmissionsTable = ({ submissions, onRowClick, loading, error }) => {
                   className={`table-row ${loadingRowId === submission.id ? 'loading' : ''}`}
                   onClick={() => handleRowClick(submission)}
                 >
-                  <button 
-                    className={`publish-button ${publishingRowId === submission.id ? 'loading' : ''}`}
-                    onClick={(e) => handlePublishClick(e, submission)}
-                    disabled={publishingRowId === submission.id}
-                    title="Publish submission"
-                  >
-                    {publishingRowId === submission.id ? 'Publishing...' : 'Publish'}
-                  </button>
                   <td className="col-site">
                     <div className="site-info">
                       <div className="site-icon">
@@ -322,6 +296,14 @@ const SubmissionsTable = ({ submissions, onRowClick, loading, error }) => {
                         <div className="reviewer-count">+5</div>
                       )}
                     </div>
+                    <button 
+                      className={`publish-button ${publishingRowId === submission.id ? 'loading' : ''}`}
+                      onClick={(e) => handlePublishClick(e, submission)}
+                      disabled={publishingRowId === submission.id}
+                      title="Publish submission"
+                    >
+                      {publishingRowId === submission.id ? 'Publishing...' : 'Publish'}
+                    </button>
                   </td>
                 </tr>
               );

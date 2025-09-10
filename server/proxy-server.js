@@ -169,6 +169,77 @@ app.post('/api/submissions/query-diffs', async (req, res) => {
   }
 });
 
+// Proxy endpoint for publishing/approving submissions
+app.post('/api/submissions/approve', async (req, res) => {
+  try {
+    const { submission_id, approver_user_email } = req.body;
+    
+    if (!submission_id) {
+      console.log('\n⚠️  Missing submission_id in request body');
+      return res.status(400).json({ 
+        error: 'Bad Request',
+        message: 'submission_id is required'
+      });
+    }
+    
+    // Use provided approver email or default
+    const requestBody = {
+      approver_user_email: approver_user_email || "br.owner1@test.com",
+      submission_id: submission_id
+    };
+    
+    console.log('\n=== APPROVE SUBMISSION REQUEST ===');
+    console.log('Request body:', JSON.stringify(requestBody, null, 2));
+    console.log('Request headers:', JSON.stringify(createHeaders(), null, 2));
+    
+    const response = await fetch('https://www.wixapis.com/enterprise/workflow/v1/submissions/approval', {
+      method: 'POST',
+      headers: createHeaders(),
+      body: JSON.stringify(requestBody)
+    });
+
+    console.log('\n=== APPROVE SUBMISSION RESPONSE ===');
+    console.log('Response status:', response.status, response.statusText);
+    console.log('Response headers:');
+    for (const [key, value] of response.headers.entries()) {
+      console.log(`  ${key}: ${value}`);
+    }
+
+    const responseText = await response.text();
+    console.log('Raw response body:', responseText);
+
+    if (!response.ok) {
+      console.error('\n❌ Wix API Error:', response.status, responseText);
+      return res.status(response.status).json({ 
+        error: `API Error: ${response.status}`,
+        message: responseText
+      });
+    }
+
+    let data;
+    try {
+      // If response is empty or just whitespace, return success
+      if (!responseText.trim()) {
+        data = { success: true, message: 'Submission approved successfully' };
+      } else {
+        data = JSON.parse(responseText);
+      }
+      console.log('\n✅ Parsed response data:', JSON.stringify(data, null, 2));
+    } catch (parseError) {
+      console.log('\n⚠️  Non-JSON response, treating as success:', parseError.message);
+      data = { success: true, message: 'Submission approved successfully', rawResponse: responseText };
+    }
+
+    res.json(data);
+  } catch (error) {
+    console.error('\n❌ Proxy server error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: error.message
+    });
+  }
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
