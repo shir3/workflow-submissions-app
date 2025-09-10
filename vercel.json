@@ -4,13 +4,6 @@
     {
       "src": "server/proxy-server.js",
       "use": "@vercel/node"
-    },
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "build"
-      }
     }
   ],
   "routes": [
@@ -22,5 +15,10 @@
       "src": "/(.*)",
       "dest": "/build/$1"
     }
-  ]
+  ],
+  "functions": {
+    "server/proxy-server.js": {
+      "includeFiles": "build/**"
+    }
+  }
 }
