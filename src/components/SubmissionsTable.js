@@ -200,6 +200,7 @@ const SubmissionsTable = ({ submissions, onRowClick, loading, error }) => {
                   <path d="M8 15l3-3H5l3 3z" opacity="0.3"/>
                 </svg>
               </th>
+              <th className="col-comment">Comment</th>
               <th className="col-sent-by">Sent by</th>
               <th className="col-reviewers">Reviewers</th>
             </tr>
@@ -238,6 +239,20 @@ const SubmissionsTable = ({ submissions, onRowClick, loading, error }) => {
                   </td>
                   <td className="col-date">
                     <span className="date-text">{formatDate(submission.createdDate)}</span>
+                  </td>
+                  <td className="col-comment">
+                    <div className="comment-text">
+                      {submission.userPayload?.comment ? (
+                        <span title={submission.userPayload.comment}>
+                          {submission.userPayload.comment.length > 50 
+                            ? submission.userPayload.comment.substring(0, 50) + '...' 
+                            : submission.userPayload.comment
+                          }
+                        </span>
+                      ) : (
+                        <span className="no-comment">No comment</span>
+                      )}
+                    </div>
                   </td>
                   <td className="col-sent-by">
                     <Avatar 
