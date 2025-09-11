@@ -1,32 +1,7 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "server/proxy-server.js",
-      "use": "@vercel/node",
-      "config": {
-        "runtime": "nodejs20.x"
-      }
-    },
-    {
-      "src": "build/**/*",
-      "use": "@vercel/static"
+  "functions": {
+    "api/submissions.js": {
+      "runtime": "nodejs20.x"
     }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/server/proxy-server.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/build/$1"
-    }
-  ],
-  "installCommand": "rm -f yarn.lock && npm ci --prefer-offline --network-timeout=600000 || npm install --network-timeout=600000",
-  "buildCommand": "npm run build",
-  "env": {
-    "YARN_CACHE_FOLDER": "/tmp/.yarn",
-    "NPM_CONFIG_CACHE": "/tmp/.npm"
   }
 }
