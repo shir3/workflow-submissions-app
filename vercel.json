@@ -23,6 +23,10 @@
       "dest": "/build/$1"
     }
   ],
-  "installCommand": "npm ci || npm install",
-  "buildCommand": "npm run build"
+  "installCommand": "rm -f yarn.lock && npm ci --prefer-offline --network-timeout=600000 || npm install --network-timeout=600000",
+  "buildCommand": "npm run build",
+  "env": {
+    "YARN_CACHE_FOLDER": "/tmp/.yarn",
+    "NPM_CONFIG_CACHE": "/tmp/.npm"
+  }
 }
