@@ -33,6 +33,20 @@ function App() {
     console.log('🔍 DEBUG: Raw diffsResponse:', diffsResponse);
     const diffs = diffsResponse || {};
     console.log('🔍 DEBUG: Processed diffs:', diffs);
+    
+    // Validate that we have meaningful diff data
+    const hasValidDiffs = diffs && typeof diffs === 'object' && (
+      Object.keys(diffs).length > 0 && 
+      (diffs.diffs || diffs.editor_diffs || diffs.seo_diffs || diffs.theme_diffs || diffs.diffsRaw)
+    );
+    
+    console.log('🔍 DEBUG: Has valid diffs?', hasValidDiffs);
+    console.log('🔍 DEBUG: Diff keys:', Object.keys(diffs || {}));
+    
+    if (!hasValidDiffs) {
+      console.error('❌ DEBUG: No valid diff data found, aborting tab opening');
+      throw new Error('No diff data available for this submission');
+    }
 
     // 2) Build the URL with query params and serialized diffs
     const queryParams = new URLSearchParams({

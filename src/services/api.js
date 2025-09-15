@@ -99,6 +99,12 @@ export const queryDiffs = async (submissionId, retryCount = 0) => {
   
   console.log('🔍 DEBUG queryDiffs: Request options:', requestOptions);
   console.log('🔍 DEBUG queryDiffs: Proxy URL:', `${PROXY_BASE_URL}/api/submissions/query-diffs`);
+  
+  // Add a small delay on first attempt to ensure API readiness
+  if (retryCount === 0) {
+    console.log('🔍 DEBUG queryDiffs: Initial delay for API readiness...');
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
 
   try {
     console.log('🔍 DEBUG queryDiffs: Making fetch request...');
@@ -120,14 +126,20 @@ export const queryDiffs = async (submissionId, retryCount = 0) => {
     console.log('🔍 DEBUG queryDiffs: Result type:', typeof result);
     console.log('🔍 DEBUG queryDiffs: Result keys:', Object.keys(result || {}));
     
-    // Check if result is empty or null
-    if (!result || (typeof result === 'object' && Object.keys(result).length === 0)) {
-      console.warn('⚠️ DEBUG queryDiffs: Received empty or null result!');
+    // Check if result is empty, null, or doesn't contain meaningful diff data
+    const hasValidData = result && typeof result === 'object' && (
+      Object.keys(result).length > 0 && 
+      (result.diffs || result.editor_diffs || result.seo_diffs || result.theme_diffs || result.diffsRaw)
+    );
+    
+    if (!hasValidData) {
+      console.warn('⚠️ DEBUG queryDiffs: Received empty or invalid diff data!');
+      console.log('🔍 DEBUG queryDiffs: Result keys:', Object.keys(result || {}));
       
       // Retry if we haven't exceeded max retries
       if (retryCount < maxRetries) {
         console.log(`🔄 DEBUG queryDiffs: Retrying... attempt ${retryCount + 1}/${maxRetries}`);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds for API to process
         return queryDiffs(submissionId, retryCount + 1);
       }
       

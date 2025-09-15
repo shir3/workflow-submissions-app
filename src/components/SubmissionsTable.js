@@ -79,7 +79,15 @@ const SubmissionsTable = ({ submissions, onRowClick, loading, error }) => {
       }
     } catch (err) {
       console.error('Failed to load diffs for submission', submission.id, err);
-      alert('Failed to load diffs for this submission. Please try again.');
+      
+      let errorMessage = 'Failed to load diffs for this submission.';
+      if (err.message && err.message.includes('No diff data available')) {
+        errorMessage = 'No diff data available for this submission. The submission may not have any changes to review.';
+      } else if (err.message && err.message.includes('HTTP error')) {
+        errorMessage = 'Server error while loading diffs. Please check your connection and try again.';
+      }
+      
+      alert(errorMessage);
     } finally {
       // Clear loading state after the operation completes
       setLoadingRowId(null);
