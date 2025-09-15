@@ -24,9 +24,15 @@ function App() {
       userEmail
     } = params;
 
+    console.log('🔍 DEBUG: Starting handleRowClick for submission:', id);
+    console.log('🔍 DEBUG: Params:', params);
+
     // 1) Fetch diffs for this submission
+    console.log('🔍 DEBUG: Calling queryDiffs API...');
     const diffsResponse = await queryDiffs(id);
+    console.log('🔍 DEBUG: Raw diffsResponse:', diffsResponse);
     const diffs = diffsResponse || {};
+    console.log('🔍 DEBUG: Processed diffs:', diffs);
 
     // 2) Build the URL with query params and serialized diffs
     const queryParams = new URLSearchParams({
