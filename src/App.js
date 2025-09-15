@@ -34,11 +34,37 @@ function App() {
     const diffs = diffsResponse || {};
     console.log('🔍 DEBUG: Processed diffs:', diffs);
     
-    // Validate that we have meaningful diff data
-    const hasValidDiffs = diffs && typeof diffs === 'object' && (
-      Object.keys(diffs).length > 0 && 
-      (diffs.diffs || diffs.editor_diffs || diffs.seo_diffs || diffs.theme_diffs || diffs.diffsRaw)
-    );
+    // Validate that we have meaningful diff data with actual changes
+    const hasValidDiffs = diffs && typeof diffs === 'object' && (() => {
+      // Check if we have any non-empty diff arrays
+      const diffSources = [
+        diffs.diffs,
+        diffs.editor_diffs, 
+        diffs.seo_diffs, 
+        diffs.theme_diffs,
+        diffs.diffsRaw?.diffs || diffs.diffsRaw
+      ];
+      
+      for (const diffSource of diffSources) {
+        if (diffSource && typeof diffSource === 'object') {
+          // Check each diff type for non-empty arrays
+          for (const [key, value] of Object.entries(diffSource)) {
+            if (Array.isArray(value) && value.length > 0) {
+              console.log(`🔍 DEBUG: Found non-empty diff array in ${key}:`, value.length, 'items');
+              return true;
+            }
+          }
+        }
+      }
+      
+      // Also check pagingMetadata count
+      if (diffs.pagingMetadata && diffs.pagingMetadata.count > 0) {
+        console.log('🔍 DEBUG: Found diffs via pagingMetadata count:', diffs.pagingMetadata.count);
+        return true;
+      }
+      
+      return false;
+    })();
     
     console.log('🔍 DEBUG: Has valid diffs?', hasValidDiffs);
     console.log('🔍 DEBUG: Diff keys:', Object.keys(diffs || {}));

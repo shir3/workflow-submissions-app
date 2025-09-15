@@ -260,7 +260,27 @@ const SubmissionsTable = ({ submissions, onRowClick, loading, error }) => {
                   key={submission.id || index}
                   className={`table-row ${loadingRowId === submission.id ? 'loading' : ''}`}
                   onClick={() => handleRowClick(submission)}
+                  style={loadingRowId === submission.id ? { pointerEvents: 'none', opacity: 0.7, position: 'relative' } : {}}
                 >
+                  {loadingRowId === submission.id && (
+                    <td colSpan="7" style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '14px',
+                      color: '#6B7280',
+                      fontWeight: '500',
+                      zIndex: 10
+                    }}>
+                      🔄 Loading diffs... This may take up to 15 seconds
+                    </td>
+                  )}
                   <td className="col-site">
                     <div className="site-info">
                       <div className="site-icon">

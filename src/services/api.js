@@ -81,7 +81,7 @@ export const querySubmissions = async (submissionId = "a2881742-6bd1-4aff-b73a-d
 };
 
 export const queryDiffs = async (submissionId, retryCount = 0) => {
-  const maxRetries = 2;
+  const maxRetries = 4; // Increase retries for diff generation
   console.log('🔍 DEBUG queryDiffs: Starting with submissionId:', submissionId, 'retry:', retryCount);
   
   if (!submissionId) {
@@ -100,10 +100,10 @@ export const queryDiffs = async (submissionId, retryCount = 0) => {
   console.log('🔍 DEBUG queryDiffs: Request options:', requestOptions);
   console.log('🔍 DEBUG queryDiffs: Proxy URL:', `${PROXY_BASE_URL}/api/submissions/query-diffs`);
   
-  // Add a small delay on first attempt to ensure API readiness
+  // Add delays based on retry count to allow for diff generation
   if (retryCount === 0) {
     console.log('🔍 DEBUG queryDiffs: Initial delay for API readiness...');
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Longer initial delay
   }
 
   try {
@@ -126,11 +126,38 @@ export const queryDiffs = async (submissionId, retryCount = 0) => {
     console.log('🔍 DEBUG queryDiffs: Result type:', typeof result);
     console.log('🔍 DEBUG queryDiffs: Result keys:', Object.keys(result || {}));
     
-    // Check if result is empty, null, or doesn't contain meaningful diff data
-    const hasValidData = result && typeof result === 'object' && (
-      Object.keys(result).length > 0 && 
-      (result.diffs || result.editor_diffs || result.seo_diffs || result.theme_diffs || result.diffsRaw)
-    );
+    // Check if result is empty, null, or doesn't contain meaningful diff data with actual changes
+    const hasValidData = result && typeof result === 'object' && (() => {
+      // Check if we have any non-empty diff arrays
+      const diffSources = [
+        result.diffs,
+        result.editor_diffs,
+        result.seo_diffs,
+        result.theme_diffs,
+        result.diffsRaw?.diffs || result.diffsRaw
+      ];
+      
+      for (const diffSource of diffSources) {
+        if (diffSource && typeof diffSource === 'object') {
+          // Check each diff type for non-empty arrays
+          for (const [key, value] of Object.entries(diffSource)) {
+            if (Array.isArray(value) && value.length > 0) {
+              console.log(`🔍 DEBUG queryDiffs: Found non-empty diff array in ${key}:`, value.length, 'items');
+              return true;
+            }
+          }
+        }
+      }
+      
+      // Also check pagingMetadata count
+      if (result.pagingMetadata && result.pagingMetadata.count > 0) {
+        console.log('🔍 DEBUG queryDiffs: Found diffs via pagingMetadata count:', result.pagingMetadata.count);
+        return true;
+      }
+      
+      console.log('🔍 DEBUG queryDiffs: No non-empty diff arrays found');
+      return false;
+    })();
     
     if (!hasValidData) {
       console.warn('⚠️ DEBUG queryDiffs: Received empty or invalid diff data!');
@@ -139,7 +166,10 @@ export const queryDiffs = async (submissionId, retryCount = 0) => {
       // Retry if we haven't exceeded max retries
       if (retryCount < maxRetries) {
         console.log(`🔄 DEBUG queryDiffs: Retrying... attempt ${retryCount + 1}/${maxRetries}`);
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds for API to process
+        // Progressive delays: 3s, 4s, 5s, 6s to allow for diff generation
+        const delay = 3000 + (retryCount * 1000);
+        console.log(`🔄 DEBUG queryDiffs: Waiting ${delay/1000}s for diff generation...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
         return queryDiffs(submissionId, retryCount + 1);
       }
       
@@ -155,7 +185,10 @@ export const queryDiffs = async (submissionId, retryCount = 0) => {
     // Retry on error if we haven't exceeded max retries
     if (retryCount < maxRetries) {
       console.log(`🔄 DEBUG queryDiffs: Retrying due to error... attempt ${retryCount + 1}/${maxRetries}`);
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Wait 1.5 seconds on error
+      // Progressive delays on error too: 2s, 3s, 4s, 5s
+      const delay = 2000 + (retryCount * 1000);
+      console.log(`🔄 DEBUG queryDiffs: Waiting ${delay/1000}s before retry after error...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
       return queryDiffs(submissionId, retryCount + 1);
     }
     
