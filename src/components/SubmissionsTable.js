@@ -69,7 +69,17 @@ const SubmissionsTable = ({ submissions, onRowClick, loading, error }) => {
     setLoadingRowId(submission.id);
     
     try {
-      await onRowClick(params);
+      // Wait for diffs to be loaded and get the iframe URL
+      const iframeUrl = await onRowClick(params);
+      
+      // Only open the tab after diffs are successfully loaded
+      if (iframeUrl) {
+        console.log('Opening iframe page:', iframeUrl);
+        window.open(iframeUrl, '_blank');
+      }
+    } catch (err) {
+      console.error('Failed to load diffs for submission', submission.id, err);
+      alert('Failed to load diffs for this submission. Please try again.');
     } finally {
       // Clear loading state after the operation completes
       setLoadingRowId(null);

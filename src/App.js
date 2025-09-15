@@ -8,7 +8,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Function to open iframe page with query parameters and diffs
+  // Function to fetch diffs and return the iframe URL
   const handleRowClick = async (params) => {
     const { 
       id, 
@@ -24,40 +24,37 @@ function App() {
       userEmail
     } = params;
 
-    try {
-      // 1) Fetch diffs for this submission
-      const diffsResponse = await queryDiffs(id);
-      const diffs = diffsResponse || {};
+    // 1) Fetch diffs for this submission
+    const diffsResponse = await queryDiffs(id);
+    const diffs = diffsResponse || {};
 
-      // 2) Build the URL with query params and serialized diffs
-      const queryParams = new URLSearchParams({
-        id: id || '',
-        msid: msid || '',
-        publishedRevision: publishedRevision || '',
-        requestedRevision: requestedRevision || '',
-        status: status || '',
-        comment: comment || '',
-        publishedUrl: publishedUrl || '',
-        editedUrl: editedUrl || '',
-        url: url || '',
-        userId: userId || '',
-        userEmail: userEmail || ''
-      });
+    // 2) Build the URL with query params and serialized diffs
+    const queryParams = new URLSearchParams({
+      id: id || '',
+      msid: msid || '',
+      publishedRevision: publishedRevision || '',
+      requestedRevision: requestedRevision || '',
+      status: status || '',
+      comment: comment || '',
+      publishedUrl: publishedUrl || '',
+      editedUrl: editedUrl || '',
+      url: url || '',
+      userId: userId || '',
+      userEmail: userEmail || ''
+    });
 
-      // Important: Keep diffs small enough for URL. We'll encode as a compact string.
-      const diffsString = encodeURIComponent(JSON.stringify(diffs));
-      queryParams.set('diff', diffsString);
+    // Important: Keep diffs small enough for URL. We'll encode as a compact string.
+    const diffsString = encodeURIComponent(JSON.stringify(diffs));
+    queryParams.set('diff', diffsString);
 
-      // 3) Open the HTML file served from the React app's public directory
-      const iframePageUrl = `${window.location.origin}/iframe-poc.html?${queryParams.toString()}`;
+    // 3) Build the iframe page URL
+    const iframePageUrl = `${window.location.origin}/iframe-poc.html?${queryParams.toString()}`;
 
-      console.log('Opening iframe page:', iframePageUrl);
-      console.log('URLs extracted:', { publishedUrl, editedUrl, url });
-      window.open(iframePageUrl, '_blank');
-    } catch (err) {
-      console.error('Failed to load diffs for submission', id, err);
-      alert('Failed to load diffs for this submission. Please try again.');
-    }
+    console.log('Diffs loaded successfully for submission:', id);
+    console.log('URLs extracted:', { publishedUrl, editedUrl, url });
+    
+    // Return the URL instead of opening it immediately
+    return iframePageUrl;
   };
 
   // Function to fetch submissions data
